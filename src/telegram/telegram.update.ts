@@ -8,6 +8,7 @@ import { Language, Task, User, UserState } from '@prisma/client';
 import { UsersService } from '../users/users.service';
 import { TasksService } from '../tasks/tasks.service';
 import { AiService, AiImageInput, StructuredTask } from '../ai/ai.service';
+import { toClaudeMediaType } from '../ai/claude-media-type';
 import { I18nService } from '../i18n/i18n.service';
 import { CollectedItem, CollectedPhotoItem, CollectorService } from '../collector/collector.service';
 import { GamificationService } from '../gamification/gamification.service';
@@ -165,21 +166,44 @@ export class TelegramUpdate {
     if (!ctx.from || !ctx.message || !('photo' in ctx.message)) return;
     const user = await this.users.findByTelegramId(ctx.from.id);
     if (!user) return;
-    const lang = user.language;
 
     const photos = ctx.message.photo;
     const fileId = photos[photos.length - 1].file_id;
-    const item: CollectedPhotoItem = {
+    await this.collectPhotoLikeItem(ctx, ctx.message, user, {
       type: 'photo',
       fileId,
       mediaGroupId: ctx.message.media_group_id,
       caption: ctx.message.caption,
       messageId: ctx.message.message_id,
-    };
+    });
+  }
 
-    const forwarded = isForwardedMessage(ctx.message);
+  // Telegram sends an image as a "document" (not "photo") when it's forwarded
+  // uncompressed or sent via the file picker — treat it the same as a photo.
+  @On('document')
+  async onDocument(@Ctx() ctx: Context) {
+    if (!ctx.from || !ctx.message || !('document' in ctx.message)) return;
+    const document = ctx.message.document;
+    if (!document.mime_type?.startsWith('image/')) return;
+
+    const user = await this.users.findByTelegramId(ctx.from.id);
+    if (!user) return;
+
+    await this.collectPhotoLikeItem(ctx, ctx.message, user, {
+      type: 'photo',
+      fileId: document.file_id,
+      mediaGroupId: ctx.message.media_group_id,
+      caption: ctx.message.caption,
+      messageId: ctx.message.message_id,
+      mimeType: document.mime_type,
+    });
+  }
+
+  private async collectPhotoLikeItem(ctx: Context, message: Message, user: User, item: CollectedPhotoItem) {
+    const lang = user.language;
+    const forwarded = isForwardedMessage(message);
     if (forwarded) {
-      const fromWhom = extractForwardSenderName(ctx.message);
+      const fromWhom = extractForwardSenderName(message);
       this.collector.push(this.chatKey(ctx), item, (items) => this.finalizeCollection(ctx, user, items, fromWhom));
       return;
     }
@@ -328,8 +352,10 @@ export class TelegramUpdate {
 
     const images: AiImageInput[] = [];
     for (const photo of photoItems.slice(0, 4)) {
+      const mediaType = toClaudeMediaType(photo.mimeType);
+      if (!mediaType) continue;
       const base64 = await this.downloadPhotoAsBase64(photo.fileId);
-      if (base64) images.push({ base64, mediaType: 'image/jpeg' });
+      if (base64) images.push({ base64, mediaType });
     }
 
     let structured: StructuredTask;

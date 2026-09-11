@@ -13,6 +13,8 @@ export interface CollectedPhotoItem {
   mediaGroupId?: string;
   caption?: string;
   messageId: number;
+  /** Set when the image arrived as a "document" (e.g. forwarded uncompressed); compressed Telegram photos are always JPEG. */
+  mimeType?: string;
 }
 
 export type CollectedItem = CollectedTextItem | CollectedPhotoItem;
