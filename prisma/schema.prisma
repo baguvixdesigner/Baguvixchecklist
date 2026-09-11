@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Language {
+  ru
+  uz
+  en
+}
+
+// What the bot is currently waiting for from this user, in their private chat.
+enum UserState {
+  IDLE
+  AWAITING_LANGUAGE
+  AWAITING_NEW_TASK
+  AWAITING_EDIT
+  AWAITING_SENDER_NAME
+}
+
+enum TaskStatus {
+  ACTIVE
+  DONE
+  CANCELLED
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  telegramId         BigInt    @unique
+  username           String?
+  firstName          String?
+  language           Language  @default(ru)
+  state              UserState @default(IDLE)
+  // task a pending reply (edit text / sender name) refers to
+  pendingTaskId      String?
+  subscriptionActive Boolean   @default(false)
+  subscriptionUntil  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  tasks         Task[]
+  monthlyStats  MonthlyStat[]
+  payments      Payment[]
+
+  @@index([telegramId])
+}
+
+model Task {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fromWhom    String
+  deadlineRaw String? // free-form text extracted by AI, e.g. "до пятницы"; null/"" -> shown as "не указано"
+  description String  @db.Text
+
+  originalText String? @db.Text
+  imageFileId  String? // Telegram file_id of the attached photo, if any
+
+  status     TaskStatus @default(ACTIVE)
+  cardChatId    BigInt?
+  cardMessageId Int?
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  archivedAt DateTime?
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+// Snapshot of a user's result for one calendar month, written by a monthly cron
+// job. Used for "previous month" / yearly reports so history survives even
+// after the live task table has moved on to the current month.
+model MonthlyStat {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  year           Int
+  month          Int // 1-12
+  completedCount Int
+  rankLevel      Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, year, month])
+}
+
+enum PaymentProvider {
+  CLICK
+  PAYME
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+  FAILED
+}
+
+// Subscription payment record. Actual Click/Payme merchant callbacks are not
+// wired up yet (see src/payments) — this table is ready to receive them.
+model Payment {
+  id       String          @id @default(cuid())
+  userId   String
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider      PaymentProvider
+  providerTxId  String?
+  amount        Int // smallest currency unit (tiyin)
+  status        PaymentStatus @default(PENDING)
+  periodMonths  Int           @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, status])
+}

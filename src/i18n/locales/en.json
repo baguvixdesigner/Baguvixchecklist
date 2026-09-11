@@ -1,0 +1,80 @@
+{
+  "menu": {
+    "report": "🏆 My report",
+    "stats": "📊 Task stats",
+    "newTask": "➕ New task",
+    "settings": "⚙️ Settings",
+    "help": "❓ Help"
+  },
+  "language": {
+    "choosePrompt": "Choose interface language:",
+    "ru": "🇷🇺 Русский",
+    "uz": "🇺🇿 O‘zbekcha",
+    "en": "🇬🇧 English",
+    "changed": "Language switched to English."
+  },
+  "help": {
+    "text": "Hi! I'll turn any messy work message into a clear task with a deadline.\n\n**How to use:**\n1. Just forward me a message with a task from a colleague — or tap ➕ **New task** to type it yourself\n2. I'll parse the text (and a photo, if there is one) and send you a card in a few seconds: who it's from, the deadline, and the task itself\n3. The original message deletes itself after 2 minutes so it doesn't clutter the chat\n4. Under each card there are three buttons: ✅ done, ✏️ edit, ❌ close\n5. In the menu below — 🏆 **My report** (your monthly rank) and 📊 **Task stats**\n\nChange language in ⚙️ Settings."
+  },
+  "newTask": {
+    "waiting": "Waiting for the task text (one or more messages, or a photo/album). Send it whenever you're ready.",
+    "defaultSender": "Myself"
+  },
+  "collector": {
+    "processing": "Parsing the task…"
+  },
+  "card": {
+    "fromLabel": "👤 From",
+    "deadlineLabel": "📅 Deadline",
+    "deadlineNotSet": "not specified",
+    "taskLabel": "📝 Task"
+  },
+  "senderName": {
+    "prompt": "The sender hid their name when forwarding. Type who this task is from (plain text):",
+    "saved": "Got it, sender saved."
+  },
+  "edit": {
+    "prompt": "What should I change? Send a new deadline and/or a clarification of the task — I'll rebuild the card.",
+    "applied": "Card updated."
+  },
+  "actions": {
+    "done": "✅ Task marked as done.",
+    "cancelled": "❌ Task closed (cancelled).",
+    "notFound": "Couldn't find that task — it may have already been processed."
+  },
+  "stats": {
+    "title": "📊 Task stats",
+    "open": "Open tasks right now: {{open}}",
+    "closedTotal": "Closed in total: {{closedTotal}}",
+    "closedThisMonth": "This month: {{closed}} of {{created}} received closed"
+  },
+  "report": {
+    "title": "🏆 My report",
+    "currentMonth": "Current month: {{count}} tasks — {{rankName}} (level {{rankLevel}})",
+    "previousMonth": "Previous month: {{count}} tasks — {{rankName}} (level {{rankLevel}})",
+    "previousMonthEmpty": "No data for the previous month yet.",
+    "yearlyTitle": "📅 {{year}} year in review",
+    "yearlyLine": "{{month}}: {{count}} tasks, {{rankName}}",
+    "yearlyTotal": "Total completed this year: {{total}}"
+  },
+  "ranks": [
+    "Intern",
+    "Junior survivor",
+    "Seasoned multitasker",
+    "Deadline master",
+    "Task-tracker guru",
+    "Lord of the briefs",
+    "Office legend",
+    "Nerves of steel",
+    "Productivity boss",
+    "Task terminator 🤖"
+  ],
+  "settings": {
+    "title": "⚙️ Settings",
+    "chooseLanguage": "Change interface language"
+  },
+  "errors": {
+    "generic": "Something went wrong, please try again shortly.",
+    "aiUnavailable": "Couldn't parse the task. Try forwarding the message again."
+  }
+}

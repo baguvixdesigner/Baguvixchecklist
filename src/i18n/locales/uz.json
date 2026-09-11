@@ -1,0 +1,80 @@
+{
+  "menu": {
+    "report": "🏆 Mening hisobotim",
+    "stats": "📊 Vazifalar statistikasi",
+    "newTask": "➕ Yangi vazifa",
+    "settings": "⚙️ Sozlamalar",
+    "help": "❓ Yordam"
+  },
+  "language": {
+    "choosePrompt": "Interfeys tilini tanlang:",
+    "ru": "🇷🇺 Русский",
+    "uz": "🇺🇿 O‘zbekcha",
+    "en": "🇬🇧 English",
+    "changed": "Til o‘zbekchaga o‘zgartirildi."
+  },
+  "help": {
+    "text": "Salom! Men har qanday ishchi topshiriqni tushunarli, muddati ko‘rsatilgan vazifaga aylantirib beraman.\n\n**Qanday foydalanish kerak:**\n1. Hamkasbingizdan kelgan xabarni menga forward qiling — yoki ➕ **Yangi vazifa** tugmasini bosib, matnni o‘zingiz kiriting\n2. Men matnni (va rasm bo‘lsa, uni ham) tahlil qilib, bir necha soniyada kartochka yuboraman: kimdan, muddati, vazifa mohiyati\n3. Asl xabar 2 daqiqadan so‘ng o‘zi o‘chib ketadi, chat chalkash bo‘lmasligi uchun\n4. Har bir kartochka ostida uchta tugma bor: ✅ bajarildi, ✏️ o‘zgartirish, ❌ yopish\n5. Pastdagi menyuda — 🏆 **Mening hisobotim** (oylik reyting) va 📊 **Vazifalar statistikasi**\n\nTilni o‘zgartirish — ⚙️ Sozlamalar bo‘limida."
+  },
+  "newTask": {
+    "waiting": "Vazifa matnini kutyapman (bir nechta xabar yoki rasm/albom bo‘lishi mumkin). Tayyor bo‘lganda yuboring.",
+    "defaultSender": "O‘zimga"
+  },
+  "collector": {
+    "processing": "Vazifani tahlil qilyapman…"
+  },
+  "card": {
+    "fromLabel": "👤 Kimdan",
+    "deadlineLabel": "📅 Muddat",
+    "deadlineNotSet": "ko‘rsatilmagan",
+    "taskLabel": "📝 Vazifa"
+  },
+  "senderName": {
+    "prompt": "Yuboruvchi forward paytida ismini yashirgan. Bu vazifa kimdan ekanini yozing (oddiy matn bilan):",
+    "saved": "Tayyor, yuboruvchi saqlandi."
+  },
+  "edit": {
+    "prompt": "Nimani o‘zgartirish kerak? Yangi muddat va/yoki mohiyatga aniqlik kiriting — kartochkani qayta yig‘aman.",
+    "applied": "Kartochka yangilandi."
+  },
+  "actions": {
+    "done": "✅ Vazifa bajarilgan deb belgilandi.",
+    "cancelled": "❌ Vazifa yopildi (bekor qilindi).",
+    "notFound": "Bu vazifa topilmadi — ehtimol, u allaqachon qayta ishlangan."
+  },
+  "stats": {
+    "title": "📊 Vazifalar statistikasi",
+    "open": "Hozir ochiq vazifalar: {{open}}",
+    "closedTotal": "Jami yopilgan: {{closedTotal}}",
+    "closedThisMonth": "Shu oy: {{created}} tadan {{closed}} tasi yopildi"
+  },
+  "report": {
+    "title": "🏆 Mening hisobotim",
+    "currentMonth": "Joriy oy: {{count}} ta vazifa — {{rankName}} (daraja {{rankLevel}})",
+    "previousMonth": "O‘tgan oy: {{count}} ta vazifa — {{rankName}} (daraja {{rankLevel}})",
+    "previousMonthEmpty": "O‘tgan oy uchun ma’lumot yo‘q.",
+    "yearlyTitle": "📅 {{year}}-yil yakunlari",
+    "yearlyLine": "{{month}}: {{count}} ta vazifa, {{rankName}}",
+    "yearlyTotal": "Yil davomida jami bajarilgan: {{total}}"
+  },
+  "ranks": [
+    "Stajyor",
+    "Junior-omonqol",
+    "Faxriy multitasker",
+    "Muddatlar ustasi",
+    "Task-trekker gurusi",
+    "TZ hukmdori",
+    "Ofis afsonasi",
+    "Po‘lat asablar",
+    "Samaradorlik bossi",
+    "Vazifalar terminatori 🤖"
+  ],
+  "settings": {
+    "title": "⚙️ Sozlamalar",
+    "chooseLanguage": "Interfeys tilini o‘zgartirish"
+  },
+  "errors": {
+    "generic": "Nimadir noto‘g‘ri ketdi, birozdan so‘ng qayta urinib ko‘ring.",
+    "aiUnavailable": "Vazifani tahlil qilib bo‘lmadi. Xabarni qayta forward qiling."
+  }
+}
