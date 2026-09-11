@@ -22,6 +22,8 @@ const LANGUAGE_CHOICE_PROMPT = 'Выбери язык интерфейса / Til
 export class TelegramUpdate {
   private readonly logger = new Logger(TelegramUpdate.name);
   private readonly originalMessageDeleteDelayMs: number;
+  // Tracks the "What to change?" prompt per chat so it can be cleaned up once the edit resolves.
+  private readonly pendingEditPrompts = new Map<string, number>();
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<Context>,
@@ -107,7 +109,8 @@ export class TelegramUpdate {
 
     await this.users.setState(user.id, UserState.AWAITING_EDIT, taskId);
     await ctx.answerCbQuery().catch(() => undefined);
-    await ctx.reply(this.i18n.t(lang, 'edit.prompt'));
+    const prompt = await ctx.reply(this.i18n.t(lang, 'edit.prompt'));
+    this.pendingEditPrompts.set(this.chatKey(ctx), prompt.message_id);
   }
 
   @On('text')
@@ -322,8 +325,19 @@ export class TelegramUpdate {
 
     await this.tasks.applyEdit(taskId, structured);
     await this.users.setState(user.id, UserState.IDLE, null);
-    await ctx.reply(this.i18n.t(lang, 'edit.applied'));
+    const confirmation = await ctx.reply(this.i18n.t(lang, 'edit.applied'));
     await this.refreshCard(ctx, taskId, lang);
+
+    const chatKey = this.chatKey(ctx);
+    const promptMessageId = this.pendingEditPrompts.get(chatKey);
+    this.pendingEditPrompts.delete(chatKey);
+    const chatId = ctx.chat?.id;
+    if (chatId) {
+      await this.bot.telegram.deleteMessage(chatId, confirmation.message_id).catch(() => undefined);
+      if (promptMessageId) {
+        await this.bot.telegram.deleteMessage(chatId, promptMessageId).catch(() => undefined);
+      }
+    }
   }
 
   private async refreshCard(ctx: Context, taskId: string, lang: Language) {
