@@ -355,52 +355,58 @@ export class TelegramUpdate {
 
   private async doFinalizeCollection(ctx: Context, user: User, items: CollectedItem[], fromWhomOrNull: string | null) {
     const lang = user.language;
-    await ctx.reply(this.i18n.t(lang, 'collector.processing')).catch(() => undefined);
+    const processingMessage = await ctx.reply(this.i18n.t(lang, 'collector.processing')).catch(() => undefined);
 
-    const texts = items.filter((item): item is Extract<CollectedItem, { type: 'text' }> => item.type === 'text').map((item) => item.text);
-    const photoItems = items.filter((item): item is CollectedPhotoItem => item.type === 'photo');
-    const captions = photoItems.map((item) => item.caption).filter((caption): caption is string => Boolean(caption));
-    const combinedText = [...texts, ...captions].join('\n\n');
-
-    const images: AiImageInput[] = [];
-    for (const photo of photoItems.slice(0, 4)) {
-      const mediaType = toClaudeMediaType(photo.mimeType);
-      if (!mediaType) continue;
-      const base64 = await this.downloadPhotoAsBase64(photo.fileId);
-      if (base64) images.push({ base64, mediaType });
-    }
-
-    let structured: StructuredTask;
     try {
-      structured = await this.ai.structure({
-        text: combinedText || '(нет текста, см. изображение)',
-        images,
-        now: new Date(),
+      const texts = items.filter((item): item is Extract<CollectedItem, { type: 'text' }> => item.type === 'text').map((item) => item.text);
+      const photoItems = items.filter((item): item is CollectedPhotoItem => item.type === 'photo');
+      const captions = photoItems.map((item) => item.caption).filter((caption): caption is string => Boolean(caption));
+      const combinedText = [...texts, ...captions].join('\n\n');
+
+      const images: AiImageInput[] = [];
+      for (const photo of photoItems.slice(0, 4)) {
+        const mediaType = toClaudeMediaType(photo.mimeType);
+        if (!mediaType) continue;
+        const base64 = await this.downloadPhotoAsBase64(photo.fileId);
+        if (base64) images.push({ base64, mediaType });
+      }
+
+      let structured: StructuredTask;
+      try {
+        structured = await this.ai.structure({
+          text: combinedText || '(нет текста, см. изображение)',
+          images,
+          now: new Date(),
+        });
+      } catch {
+        await ctx.reply(this.i18n.t(lang, 'errors.aiUnavailable'));
+        return;
+      }
+
+      const task = await this.tasks.create({
+        userId: user.id,
+        fromWhom: fromWhomOrNull ?? '',
+        structured,
+        originalText: combinedText,
+        imageFileId: photoItems[0]?.fileId,
       });
-    } catch {
-      await ctx.reply(this.i18n.t(lang, 'errors.aiUnavailable'));
-      return;
+
+      const imageBuffer = images[0] ? Buffer.from(images[0].base64, 'base64') : undefined;
+      await this.sendCard(ctx, task, lang, imageBuffer);
+
+      if (!fromWhomOrNull) {
+        await this.users.setState(user.id, UserState.AWAITING_SENDER_NAME, task.id);
+        await ctx.reply(this.i18n.t(lang, 'senderName.prompt'));
+      } else if (user.state === UserState.AWAITING_NEW_TASK) {
+        await this.users.setState(user.id, UserState.IDLE, null);
+      }
+
+      this.scheduleOriginalDeletion(ctx, items);
+    } finally {
+      if (processingMessage) {
+        await this.bot.telegram.deleteMessage(processingMessage.chat.id, processingMessage.message_id).catch(() => undefined);
+      }
     }
-
-    const task = await this.tasks.create({
-      userId: user.id,
-      fromWhom: fromWhomOrNull ?? '',
-      structured,
-      originalText: combinedText,
-      imageFileId: photoItems[0]?.fileId,
-    });
-
-    const imageBuffer = images[0] ? Buffer.from(images[0].base64, 'base64') : undefined;
-    await this.sendCard(ctx, task, lang, imageBuffer);
-
-    if (!fromWhomOrNull) {
-      await this.users.setState(user.id, UserState.AWAITING_SENDER_NAME, task.id);
-      await ctx.reply(this.i18n.t(lang, 'senderName.prompt'));
-    } else if (user.state === UserState.AWAITING_NEW_TASK) {
-      await this.users.setState(user.id, UserState.IDLE, null);
-    }
-
-    this.scheduleOriginalDeletion(ctx, items);
   }
 
   private async sendCard(ctx: Context, task: Task, lang: Language, imageBuffer?: Buffer) {
