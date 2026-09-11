@@ -87,7 +87,8 @@ export class TelegramUpdate {
     const status = action === 'done' ? 'DONE' : 'CANCELLED';
     await this.tasks.archive(taskId, status);
     await ctx.answerCbQuery(this.i18n.t(lang, action === 'done' ? 'actions.done' : 'actions.cancelled')).catch(() => undefined);
-    await ctx.editMessageReplyMarkup(undefined).catch(() => undefined);
+    // Task stays in the DB for history/stats (spec 4) — only the visible card is removed so the chat doesn't pile up.
+    await ctx.deleteMessage().catch(() => undefined);
   }
 
   @Action(/^task:edit:(.+)$/)
