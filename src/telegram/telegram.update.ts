@@ -345,11 +345,13 @@ export class TelegramUpdate {
     if (!task || !task.cardChatId || !task.cardMessageId) return;
     const text = buildCardText(this.i18n, lang, task);
     const chatId = Number(task.cardChatId);
+    // Telegram drops the inline keyboard on edit unless reply_markup is resupplied.
+    const keyboard = cardInlineKeyboard(taskId);
     try {
       if (task.imageFileId) {
-        await this.bot.telegram.editMessageCaption(chatId, task.cardMessageId, undefined, text);
+        await this.bot.telegram.editMessageCaption(chatId, task.cardMessageId, undefined, text, keyboard);
       } else {
-        await this.bot.telegram.editMessageText(chatId, task.cardMessageId, undefined, text);
+        await this.bot.telegram.editMessageText(chatId, task.cardMessageId, undefined, text, keyboard);
       }
     } catch (error) {
       this.logger.warn(`Could not refresh card ${taskId}: ${(error as Error).message}`);
