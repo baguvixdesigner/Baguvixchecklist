@@ -22,6 +22,15 @@ Telegram-бот, который превращает пересланные ра
 3. `npm run prisma:migrate` — создаст таблицы (`User`, `Task`, `MonthlyStat`, `Payment`)
 4. `npm run start:dev`
 
+### Через Docker Compose (ближе к продакшену на VDS)
+
+1. `cp .env.example .env` и заполнить `TELEGRAM_BOT_TOKEN`, `ANTHROPIC_API_KEY`
+   (`DATABASE_URL` compose подставит сам, указывать не обязательно)
+2. `docker compose up -d --build`
+
+Поднимет Postgres + бота, применит миграции (`prisma migrate deploy`) при старте
+контейнера бота.
+
 ## Структура
 
 ```
@@ -33,7 +42,7 @@ src/
   gamification/   — ранги, месячный cron-снепшот, годовой отчёт
   users/          — регистрация, язык, состояние диалога
   i18n/           — переводы ru/uz/en
-  payments/       — заготовка подписки Click/Payme (см. ниже)
+  payments/       — заготовка подписки (Click Business, см. ниже)
   prisma/         — Prisma-клиент как Nest-сервис
 ```
 
@@ -49,8 +58,10 @@ src/
 
 ## Что осталось для продакшена
 
-- **Click/Payme**: `src/payments` содержит модель данных и сервис применения оплаты
-  (`confirmPayment`/`failPayment`), но реальные prepare/complete вебхуки провайдеров
-  не подключены — нужны мерчант-креденшлы обоих провайдеров.
-- Деплой на общий VDS (ahost.uz) — процесс-менеджер (pm2/systemd) и миграции при деплое.
+- **Оплата подписки**: решили подключать **Click Business для самозанятых** — заявка
+  на рассмотрении. `src/payments` содержит модель данных и сервис применения оплаты
+  (`confirmPayment`/`failPayment`), но сама интеграция (вебхук/колбэк от Click, сверка
+  подписи) не подключена — ждём одобрения заявки и реквизитов. Payme остался в схеме
+  БД (`PaymentProvider`) на будущее, но сейчас не в приоритете.
+- Деплой на общий VDS (ahost.uz) — см. `Dockerfile` и `docker-compose.yml`.
 - Rate-limit / retry для Claude API на случай пиковой нагрузки.

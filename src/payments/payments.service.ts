@@ -3,16 +3,17 @@ import { PaymentProvider, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
- * Subscription payments via Click and Payme (spec section 11: automatic
- * payment from launch, unlike telegram-shop-builder's manual flow).
+ * Subscription payments (spec section 11: automatic payment from launch,
+ * unlike telegram-shop-builder's manual flow). Current plan is Click
+ * Business for self-employed — application pending; Payme stays modeled
+ * in the schema for later but isn't the near-term target.
  *
  * This module records payment intents and applies successful ones to the
- * user's subscription. The actual Click/Payme merchant API integration
- * (their prepare/complete webhook contracts, signature checks) is not wired
- * up yet — it needs real merchant credentials (the CLICK_ and PAYME_ vars in .env)
- * issued for this product before it can go live. Wire the provider
- * controllers up to call `confirmPayment` / `failPayment` below once those
- * credentials exist.
+ * user's subscription. The actual provider integration (prepare/complete
+ * webhook contract, signature checks) is not wired up yet — it needs real
+ * credentials (the CLICK_ vars in .env) once the application is approved.
+ * Wire the provider controller up to call `confirmPayment` / `failPayment`
+ * below once those credentials exist.
  */
 @Injectable()
 export class PaymentsService {
