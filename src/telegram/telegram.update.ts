@@ -332,9 +332,9 @@ export class TelegramUpdate {
     const chatId = Number(task.cardChatId);
     try {
       if (task.imageFileId) {
-        await this.bot.telegram.editMessageCaption(chatId, task.cardMessageId, undefined, text, { parse_mode: 'Markdown' });
+        await this.bot.telegram.editMessageCaption(chatId, task.cardMessageId, undefined, text);
       } else {
-        await this.bot.telegram.editMessageText(chatId, task.cardMessageId, undefined, text, { parse_mode: 'Markdown' });
+        await this.bot.telegram.editMessageText(chatId, task.cardMessageId, undefined, text);
       }
     } catch (error) {
       this.logger.warn(`Could not refresh card ${taskId}: ${(error as Error).message}`);
@@ -412,11 +412,11 @@ export class TelegramUpdate {
       // original file_id: a "document"-origin image has a document-typed file_id
       // that sendPhoto rejects, which previously crashed the whole bot.
       message = imageBuffer
-        ? await ctx.replyWithPhoto({ source: imageBuffer }, { caption: text, parse_mode: 'Markdown', ...keyboard })
-        : await ctx.reply(text, { parse_mode: 'Markdown', ...keyboard });
+        ? await ctx.replyWithPhoto({ source: imageBuffer }, { caption: text, ...keyboard })
+        : await ctx.reply(text, keyboard);
     } catch (error) {
       this.logger.error(`Failed to send card with photo, falling back to text-only: ${(error as Error).message}`);
-      message = await ctx.reply(text, { parse_mode: 'Markdown', ...keyboard });
+      message = await ctx.reply(text, keyboard);
     }
 
     await this.tasks.linkCard(task.id, message.chat.id, message.message_id);
