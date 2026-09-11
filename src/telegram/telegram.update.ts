@@ -337,6 +337,9 @@ export class TelegramUpdate {
       if (promptMessageId) {
         await this.bot.telegram.deleteMessage(chatId, promptMessageId).catch(() => undefined);
       }
+      if (ctx.message?.message_id) {
+        await this.bot.telegram.deleteMessage(chatId, ctx.message.message_id).catch(() => undefined);
+      }
     }
   }
 
