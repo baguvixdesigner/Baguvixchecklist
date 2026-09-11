@@ -342,6 +342,17 @@ export class TelegramUpdate {
   }
 
   private async finalizeCollection(ctx: Context, user: User, items: CollectedItem[], fromWhomOrNull: string | null) {
+    try {
+      await this.doFinalizeCollection(ctx, user, items, fromWhomOrNull);
+    } catch (error) {
+      // Anything unexpected here (Telegram API rejection, DB hiccup, etc.) must
+      // not crash the whole bot for every other user — reply and move on.
+      this.logger.error(`finalizeCollection failed: ${(error as Error).message}`, (error as Error).stack);
+      await ctx.reply(this.i18n.t(user.language, 'errors.generic')).catch(() => undefined);
+    }
+  }
+
+  private async doFinalizeCollection(ctx: Context, user: User, items: CollectedItem[], fromWhomOrNull: string | null) {
     const lang = user.language;
     await ctx.reply(this.i18n.t(lang, 'collector.processing')).catch(() => undefined);
 
@@ -378,7 +389,8 @@ export class TelegramUpdate {
       imageFileId: photoItems[0]?.fileId,
     });
 
-    await this.sendCard(ctx, task, lang);
+    const imageBuffer = images[0] ? Buffer.from(images[0].base64, 'base64') : undefined;
+    await this.sendCard(ctx, task, lang, imageBuffer);
 
     if (!fromWhomOrNull) {
       await this.users.setState(user.id, UserState.AWAITING_SENDER_NAME, task.id);
@@ -390,13 +402,22 @@ export class TelegramUpdate {
     this.scheduleOriginalDeletion(ctx, items);
   }
 
-  private async sendCard(ctx: Context, task: Task, lang: Language) {
+  private async sendCard(ctx: Context, task: Task, lang: Language, imageBuffer?: Buffer) {
     const text = buildCardText(this.i18n, lang, task);
     const keyboard = cardInlineKeyboard(task.id);
 
-    const message = task.imageFileId
-      ? await ctx.replyWithPhoto(task.imageFileId, { caption: text, parse_mode: 'Markdown', ...keyboard })
-      : await ctx.reply(text, { parse_mode: 'Markdown', ...keyboard });
+    let message: Message.TextMessage | Message.PhotoMessage;
+    try {
+      // Re-upload the bytes we already downloaded rather than reusing Telegram's
+      // original file_id: a "document"-origin image has a document-typed file_id
+      // that sendPhoto rejects, which previously crashed the whole bot.
+      message = imageBuffer
+        ? await ctx.replyWithPhoto({ source: imageBuffer }, { caption: text, parse_mode: 'Markdown', ...keyboard })
+        : await ctx.reply(text, { parse_mode: 'Markdown', ...keyboard });
+    } catch (error) {
+      this.logger.error(`Failed to send card with photo, falling back to text-only: ${(error as Error).message}`);
+      message = await ctx.reply(text, { parse_mode: 'Markdown', ...keyboard });
+    }
 
     await this.tasks.linkCard(task.id, message.chat.id, message.message_id);
   }
