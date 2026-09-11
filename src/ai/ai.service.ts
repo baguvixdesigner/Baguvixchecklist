@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
+import { parseStructuredResponse } from './parse-structured-response';
 
 export interface AiImageInput {
   /** base64-encoded image bytes, no data: prefix */
@@ -81,25 +82,10 @@ export class AiService {
 
       const textBlock = response.content.find((block) => block.type === 'text');
       const raw = textBlock && 'text' in textBlock ? textBlock.text : '';
-      return this.parse(raw);
+      return parseStructuredResponse(raw);
     } catch (error) {
       this.logger.error(`Claude structuring failed: ${(error as Error).message}`);
       throw error;
-    }
-  }
-
-  private parse(raw: string): StructuredTask {
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    const jsonText = jsonMatch ? jsonMatch[0] : raw;
-    try {
-      const parsed = JSON.parse(jsonText) as { deadline?: string | null; description?: string };
-      return {
-        deadlineRaw: parsed.deadline ?? null,
-        description: (parsed.description ?? '').trim() || raw.trim(),
-      };
-    } catch {
-      this.logger.warn('Could not parse Claude response as JSON, falling back to raw text');
-      return { deadlineRaw: null, description: raw.trim() };
     }
   }
 }
