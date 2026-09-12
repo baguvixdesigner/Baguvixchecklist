@@ -4,13 +4,13 @@ import { buildCardText } from './card.util';
 describe('buildCardText', () => {
   const i18n = new I18nService();
 
-  it('renders from/deadline/task on three lines', () => {
+  it('renders from/deadline/task as separate blank-line-separated blocks', () => {
     const text = buildCardText(i18n, 'ru', {
       fromWhom: 'Иван',
       deadlineRaw: 'до пятницы',
       description: 'Подготовить отчёт',
     });
-    expect(text).toBe('👤 От кого: Иван\n📅 Дедлайн: до пятницы\n📝 Задача: Подготовить отчёт');
+    expect(text).toBe('👤 От кого: Иван\n\n📅 Дедлайн: до пятницы\n\n📝 Задача: Подготовить отчёт');
   });
 
   it('shows the localized "not set" label when deadline is null', () => {

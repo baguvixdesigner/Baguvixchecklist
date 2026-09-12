@@ -8,5 +8,5 @@ export function buildCardText(i18n: I18nService, lang: Language, task: Pick<Task
     `${i18n.t(lang, 'card.fromLabel')}: ${task.fromWhom || '—'}`,
     `${i18n.t(lang, 'card.deadlineLabel')}: ${deadline}`,
     `${i18n.t(lang, 'card.taskLabel')}: ${task.description}`,
-  ].join('\n');
+  ].join('\n\n');
 }
